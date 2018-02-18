@@ -4,10 +4,11 @@ import {
   startAddExpense,
   addExpense,
   editExpense,
+  startEditExpense,
   removeExpense,
   startRemoveExpense,
   setExpenses,
-  startSetExpenses  
+  startSetExpenses,    
 } from '../../actions/expenses';
 import expenses from '../fixtures/expenses';
 import database from '../../firebase/firebase';
@@ -43,7 +44,7 @@ test('should remove expense from firebase', (done) => {
   }).then((snapshot) => {
     expect(snapshot.val()).toBeFalsy();
     done();
-  })
+  });
 });
 
 test('should setup edit expense action object', () => {
@@ -54,6 +55,28 @@ test('should setup edit expense action object', () => {
     updates: {
         note: 'New note string'
     }
+  });
+});
+
+test('should edit expenses from firebase', (done) => {
+  const store = createMockStore({});
+  const id = expenses[1].id;
+  const updates = {
+    amount: 777,
+    description: 'Updated Description'
+  };
+  store.dispatch(startEditExpense(id, updates)).then(() => {
+    const actions = store.getActions();
+    expect(actions[0]).toEqual({
+      type: 'EDIT_EXPENSE', 
+      id,
+      updates
+    });
+    return database.ref(`expenses/${id}`).once('value');
+  }).then((snapshot) => {
+    expect(snapshot.val().amount).toBe(updates.amount);
+    expect(snapshot.val().description).toBe(updates.description);
+    done();
   });
 });
 
@@ -138,3 +161,4 @@ test('should fetch expenses from firebase', (done) => {
     done();
   });
 });
+
